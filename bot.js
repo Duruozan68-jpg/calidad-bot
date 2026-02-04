@@ -45,7 +45,7 @@ const LINKS = {
   telegram: "https://t.me/+GHwxWTV0RoRiZjA0",
   luffa: "https://callup.luffa.im/c/8PiYHFBvV1z",
   snapchat: "https://snapchat.com/t/mf5ujrdV",
-  miniapp: "https://duruozan68-jpg.github.io/calidad56-miniapp/?v=1000",
+  miniapp: "https://duruozan68-jpg.github.io/calidad56-miniapp/?v=1001",
   secretary: "https://t.me/Calidad_Secretaire"
 };
 
