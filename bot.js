@@ -1,139 +1,157 @@
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
+const path = require("path");
 
-// =======================
-// 🔐 VARIABLES RAILWAY
-// =======================
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const ADMIN_ID = process.env.ADMIN_ID;
-
 if (!BOT_TOKEN) {
   console.error("❌ BOT_TOKEN manquant");
   process.exit(1);
 }
 
-// =======================
-// 🤖 INIT BOT
-// =======================
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
-
 console.log("✅ Bot lancé");
 
 // =======================
-// 🟢 MESSAGE BIENVENUE
+// 🖼️ IMAGE
 // =======================
-const WELCOME_MESSAGE = `💚 *BIENVENUE SUR Calidad 🚜*
+const IMAGE_PATH = path.join(__dirname, "assets", "welcome.jpg");
+
+// =======================
+// 📝 TEXTE
+// =======================
+const WELCOME_TEXT = `💚 *BIENVENUE SUR Calidad 🚜*
 
 ⚠️ *Attention* : Nos bots et canaux Telegram peuvent être désactivés à tout moment.
 
-👉🚨 *Rejoignez notre canal Luffa* pour rester connectés en cas de bannissement.
+👉🚨 *Rejoignez notre canal Luffa* pour rester connectés en cas de bannissement.  
 Un nouveau lien officiel y sera toujours publié en priorité.
 
-🔗 Retrouvez tous nos canaux officiels via les boutons ci‑dessous.`;
+🔗 Retrouvez tous nos canaux officiels et contactez‑nous via les boutons ci‑dessous.`;
 
 // =======================
-// 🧭 CLAVIERS
+// 🧱 MENU PRINCIPAL (COMPLET)
 // =======================
-const mainKeyboard = {
+const MAIN_KEYBOARD = {
+  parse_mode: "Markdown",
   reply_markup: {
     inline_keyboard: [
-      [
-        { text: "🛒 Calidad Shop", url: "https://ton-miniapp-link.com" }
-      ],
+      [{ text: "🛒 Calidad Shop", url: "https://ton-miniapp-link.com" }],
+
       [
         { text: "📣 Canal Telegram", url: "https://t.me/ton_canal_telegram" },
-        { text: "📣 Canal Luffa", url: "https://luffa.io/ton_canal" }
+        { text: "🌐 Canal Luffa", url: "https://luffa.io/ton_canal" }
       ],
+
       [
         { text: "👻 Snapchat", url: "https://snapchat.com/t/mf5ujrdV" }
       ],
+
       [
-        { text: "ℹ️ Information", callback_data: "INFO_MENU" }
+        { text: "ℹ️ Informations", callback_data: "INFO" },
+        { text: "📞 Contact", url: "https://t.me/ton_secretaire" }
+      ],
+
+      [
+        { text: "🔗 Partager", callback_data: "SHARE" },
+        { text: "👤 Mon Compte", callback_data: "ACCOUNT" }
       ]
     ]
-  },
-  parse_mode: "Markdown"
+  }
 };
 
-const infoKeyboard = {
+// =======================
+// ℹ️ SOUS-MENU INFOS
+// =======================
+const INFO_KEYBOARD = {
+  parse_mode: "Markdown",
   reply_markup: {
     inline_keyboard: [
       [
-        { text: "🚚 Livraison", callback_data: "INFO_LIVRAISON" },
-        { text: "🏠 Meetup", callback_data: "INFO_MEETUP" }
+        { text: "🚚 Livraison", callback_data: "LIVRAISON" },
+        { text: "🏠 Meetup", callback_data: "MEETUP" }
       ],
-      [
-        { text: "📞 Secrétaire", url: "https://t.me/ton_secretaire" }
-      ],
-      [
-        { text: "⬅️ Retour", callback_data: "BACK_HOME" }
-      ]
+      [{ text: "⬅️ Retour", callback_data: "BACK" }]
     ]
-  },
-  parse_mode: "Markdown"
+  }
 };
 
 // =======================
-// ▶️ /start
+// ▶️ START
 // =======================
-bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, WELCOME_MESSAGE, mainKeyboard);
+bot.onText(/\/start/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  await bot.sendPhoto(chatId, IMAGE_PATH, {
+    caption: WELCOME_TEXT,
+    ...MAIN_KEYBOARD
+  });
 });
 
 // =======================
-// 🔘 CALLBACKS
+// 🔘 ACTIONS
 // =======================
-bot.on("callback_query", (query) => {
-  const chatId = query.message.chat.id;
+bot.on("callback_query", async (q) => {
+  const chatId = q.message.chat.id;
+  const msgId = q.message.message_id;
 
-  switch (query.data) {
-    case "INFO_MENU":
-      bot.editMessageText("ℹ️ *Informations Calidad*", {
+  switch (q.data) {
+    case "INFO":
+      await bot.editMessageText("ℹ️ *Informations Calidad*", {
         chat_id: chatId,
-        message_id: query.message.message_id,
-        ...infoKeyboard
+        message_id: msgId,
+        ...INFO_KEYBOARD
       });
       break;
 
-    case "INFO_LIVRAISON":
-      bot.sendMessage(
+    case "LIVRAISON":
+      await bot.sendMessage(
         chatId,
-        `🚚 *Livraison - Morbihan*
+        `🚚 *Livraison – Morbihan*
 
-Notre service de livraison couvre tout le Morbihan.
-
-⚠️ Un minimum de commande est requis.
-Contactez‑nous pour connaître les conditions.`,
+Notre service couvre tout le département 56.
+⚠️ Un minimum de commande est requis.`,
         { parse_mode: "Markdown" }
       );
       break;
 
-    case "INFO_MEETUP":
-      bot.sendMessage(
+    case "MEETUP":
+      await bot.sendMessage(
         chatId,
-        `🏠 *Meetup - Département 56*
+        `🏠 *Meetup – Département 56*
 
-Le service Meetup est disponible uniquement dans le Morbihan.`,
+Service disponible uniquement dans le Morbihan.`,
         { parse_mode: "Markdown" }
       );
       break;
 
-    case "BACK_HOME":
-      bot.editMessageText(WELCOME_MESSAGE, {
+    case "SHARE":
+      await bot.sendMessage(
+        chatId,
+        `🔗 *Partage nos liens officiels* :
+
+📣 Telegram : https://t.me/ton_canal_telegram  
+🌐 Luffa : https://luffa.io/ton_canal`,
+        { parse_mode: "Markdown" }
+      );
+      break;
+
+    case "ACCOUNT":
+      await bot.sendMessage(
+        chatId,
+        "👤 *Mon Compte*\n\nFonction bientôt disponible.",
+        { parse_mode: "Markdown" }
+      );
+      break;
+
+    case "BACK":
+      await bot.editMessageCaption(WELCOME_TEXT, {
         chat_id: chatId,
-        message_id: query.message.message_id,
-        ...mainKeyboard
+        message_id: msgId,
+        ...MAIN_KEYBOARD
       });
       break;
   }
 
-  bot.answerCallbackQuery(query.id);
-});
-
-// =======================
-// 🛑 ERREURS
-// =======================
-bot.on("polling_error", (err) => {
-  console.error("Polling error:", err.message);
+  bot.answerCallbackQuery(q.id);
 });
 
